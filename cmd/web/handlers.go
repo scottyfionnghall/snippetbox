@@ -16,6 +16,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 	}
 	files := []string{
 		"./ui/html/base.html",
+		"./ui/html/partials/nav.html",
 		"./ui/html/pages/home.html",
 	}
 	ts, err := template.ParseFiles(files...)
@@ -41,6 +42,7 @@ func snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	files := []string{
+		"./ui/html/partials/nav.html",
 		"./ui/html/base.html",
 		"./ui/html/pages/view.html",
 	}
@@ -70,5 +72,3 @@ func snippetCreate(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Create a new snippet..."))
 
 }
-
-// Check if requset is using allowed method
