@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com.scottyfionnghall.snippetbox/internal/models"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -15,6 +16,7 @@ import (
 type appliaction struct {
 	errorLog *log.Logger
 	infoLog  *log.Logger
+	snippets *models.SnippetModel
 }
 
 func main() {
@@ -37,9 +39,15 @@ func main() {
 	defer db.Close()
 	// Initialize a new instance of our applicaiton struct, containing
 	// the dependencies
+	snippets, err := models.NewSnippetModel(db)
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+	defer snippets.CloseAll()
 	app := &appliaction{
 		errorLog: errorLog,
 		infoLog:  infoLog,
+		snippets: snippets,
 	}
 	// Initialize a new http.Server struct
 	srv := &http.Server{

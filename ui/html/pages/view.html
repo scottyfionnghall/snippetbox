@@ -1,4 +1,9 @@
 {{define "title"}}View{{end}}
 {{define "main"}} 
-    <h2>{{.}}</h2>
+    <h2>{{ .Title}}</h2>
+    <p>{{ .Content}}</p>
+    <p>Created at: {{ .Created}}</p>
+    <a href="/snippet/delete?id={{.ID}}">  
+        <input type="submit"/>  
+       </a>
 {{end}}
