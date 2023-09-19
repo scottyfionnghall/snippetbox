@@ -1,9 +1,16 @@
 {{define "title"}}View{{end}}
-{{define "main"}} 
-    <h2>{{ .Title}}</h2>
-    <p>{{ .Content}}</p>
-    <p>Created at: {{ .Created}}</p>
-    <a href="/snippet/delete?id={{.ID}}">  
-        <input type="submit"/>  
-       </a>
+{{define "main"}}
+    {{with .Snippet}}
+    <div class="snippet">
+        <div class="metadata">
+            <strong>{{.Title}}</strong>
+            <span>#{{.ID}}</span>
+        </div>
+        <pre><code>{{.Content}}</code></pre>
+        <div class="metadata">
+            <time>Created: {{humanDate .Created}}</time>
+            <time>Expires: {{humanDate .Expires}}</time>
+        </div>
+    </div>
+    {{end}}
 {{end}}

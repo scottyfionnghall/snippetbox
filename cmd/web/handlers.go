@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
 
@@ -23,22 +22,9 @@ func (app *appliaction) home(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
-	files := []string{
-		"./ui/html/base.html",
-		"./ui/html/partials/nav.html",
-		"./ui/html/pages/home.html",
-	}
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, err) // Uses the serverError() helper
-		return
-	}
-	err = ts.ExecuteTemplate(w, "base", snippets)
-	if err != nil {
-		app.serverError(w, err) // Uses the serverError() helper
-		return
-	}
-
+	data := app.newTemplateData(r)
+	data.Snippets = snippets
+	app.render(w, http.StatusOK, "home.html", data)
 }
 
 // Add a SnippetView handler function.
@@ -60,22 +46,9 @@ func (app *appliaction) snippetView(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	files := []string{
-		"./ui/html/partials/nav.html",
-		"./ui/html/base.html",
-		"./ui/html/pages/view.html",
-	}
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-	err = ts.ExecuteTemplate(w, "base", snippet)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
+	data := app.newTemplateData(r)
+	data.Snippet = snippet
+	app.render(w, http.StatusOK, "view.html", data)
 }
 
 // Add a SnippetCreate handler function.

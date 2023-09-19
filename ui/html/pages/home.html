@@ -1,11 +1,22 @@
 {{define "title"}}Home{{end}}
 {{define "main"}}
     <h2>Latest Snipptes</h2>
-    {{if .}}
-    {{range .}}
-    <p><a href="/snippet/view?id={{.ID}}">{{.Title}}</a></p>
-    {{end}}
+    {{if .Snippets}}
+    <table>
+        <tr>
+            <th>Title</th>
+            <th>Created</th>
+            <th>ID</th>
+        </tr>
+        {{range .Snippets}}
+        <tr>
+            <td><a href="/snippet/view?id={{.ID}}">{{.Title}}</a></td>
+            <td>{{humanDate .Created}}</td>
+            <td>#{{.ID}}</td>
+        </tr>
+        {{end}}
+    </table>
     {{else}}
-    <p>No snippets yet!</p>
+        <p>There's nothing to see here ... yet!</p>
     {{end}}
 {{end}}

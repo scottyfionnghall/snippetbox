@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -14,9 +15,10 @@ import (
 
 // Define an application struct to hold the application-wide dependencies.
 type appliaction struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	snippets *models.SnippetModel
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	snippets      *models.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -35,8 +37,6 @@ func main() {
 	if err != nil {
 		errorLog.Fatal(err)
 	}
-	// Defer a db.Close() call
-	defer db.Close()
 	// Initialize a new instance of our applicaiton struct, containing
 	// the dependencies
 	snippets, err := models.NewSnippetModel(db)
@@ -44,10 +44,17 @@ func main() {
 		errorLog.Fatal(err)
 	}
 	defer snippets.CloseAll()
+	// Defer a db.Close() call
+	defer db.Close()
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		errorLog.Fatal(err)
+	}
 	app := &appliaction{
-		errorLog: errorLog,
-		infoLog:  infoLog,
-		snippets: snippets,
+		errorLog:      errorLog,
+		infoLog:       infoLog,
+		snippets:      snippets,
+		templateCache: templateCache,
 	}
 	// Initialize a new http.Server struct
 	srv := &http.Server{
