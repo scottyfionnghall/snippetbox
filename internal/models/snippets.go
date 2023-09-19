@@ -25,7 +25,7 @@ type SnippetModel struct {
 }
 
 // Creates a constructor for a SnippetModel, which includes prepared statements.
-// This is need so we can reuse this statements and not recrete them on each call.
+// This is needed so we can reuse this statements and not recreate them on each call.
 func NewSnippetModel(db *sql.DB) (*SnippetModel, error) {
 	insertStmt, err := db.Prepare(`INSERT INTO snippets (title, content, created, expires)
 	VALUES(?,?,UTC_TIMESTAMP(),DATE_ADD(UTC_TIMESTAMP(),INTERVAL ? DAY))`)
