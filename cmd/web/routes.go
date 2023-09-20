@@ -3,23 +3,29 @@ package main
 import (
 	"net/http"
 
+	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
 )
 
 // The routes method returns a servemux containing out application routes
 func (app *appliaction) routes() http.Handler {
-	mux := http.NewServeMux()
+	router := httprouter.New()
+
+	router.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		app.notFound(w)
+	})
+
 	// Define file server
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	mux.Handle("/static/", http.StripPrefix("/static", neuter(fileServer)))
+	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", neuter(fileServer)))
 	// Define handler functions
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/snippet/view", app.snippetView)
-	mux.HandleFunc("/snippet/create", app.snippetCreate)
-	mux.HandleFunc("/snippet/delete", app.snippetDelete)
-
+	router.HandlerFunc(http.MethodGet, "/", app.home)
+	router.HandlerFunc(http.MethodGet, "/snippet/view/:id", app.snippetView)
+	router.HandlerFunc(http.MethodGet, "/snippet/create", app.snippetCreate)
+	router.HandlerFunc(http.MethodPost, "/snippet/create", app.snippetCreatePost)
+	router.HandlerFunc(http.MethodDelete, "/snippet/delete", app.snippetDelete)
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 
 	// Pass the servemux as the 'next' parameter to the secureHeaders middleware.
-	return standard.Then(mux)
+	return standard.Then(router)
 }

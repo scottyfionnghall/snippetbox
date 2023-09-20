@@ -8,15 +8,13 @@ import (
 	"strconv"
 
 	"github.com.scottyfionnghall.snippetbox/internal/models"
+	"github.com/julienschmidt/httprouter"
 )
 
-// Add a "/" handler function
+// This handler returns home page.
 func (app *appliaction) home(w http.ResponseWriter, r *http.Request) {
 	// Check if the current request URL path exactly matches "/".
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
+
 	snippets, err := app.snippets.Latest()
 	if err != nil {
 		app.serverError(w, err)
@@ -27,11 +25,14 @@ func (app *appliaction) home(w http.ResponseWriter, r *http.Request) {
 	app.render(w, http.StatusOK, "home.html", data)
 }
 
-// Add a SnippetView handler function.
+// This handler allow to show the user particular snippet based on the passed ID.
 func (app *appliaction) snippetView(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+	// httprouter extracts all parameters passed in the request in a form
+	// of a slice
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil || id < 1 {
-		app.notFound(w) // Uses notFound() helper
+		app.notFound(w)
 		return
 	}
 	// Use the SnippetModel object's Get method to retrieve the data for a
@@ -51,13 +52,8 @@ func (app *appliaction) snippetView(w http.ResponseWriter, r *http.Request) {
 	app.render(w, http.StatusOK, "view.html", data)
 }
 
-// Add a SnippetCreate handler function.
-func (app *appliaction) snippetCreate(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)
-		app.clientError(w, http.StatusMethodNotAllowed)
-		return
-	}
+// This handler handels all request to create a new snippet
+func (app *appliaction) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	var p models.Snippet
 	err := json.NewDecoder(r.Body).Decode(&p)
 	if err != nil {
@@ -76,7 +72,11 @@ func (app *appliaction) snippetCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Redirect the user to the relevant page for the snippet.
-	http.Redirect(w, r, fmt.Sprintf("/snippet/view?id=%d", id), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
+}
+
+func (app *appliaction) snippetCreate(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Display the form for creating a new snippet..."))
 }
 
 func (app *appliaction) snippetDelete(w http.ResponseWriter, r *http.Request) {
