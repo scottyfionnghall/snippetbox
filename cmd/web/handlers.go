@@ -1,15 +1,25 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com.scottyfionnghall.snippetbox/internal/models"
+	"github.com.scottyfionnghall.snippetbox/internal/validator"
 	"github.com/julienschmidt/httprouter"
 )
+
+// Define a snippetCreateForm struct to represent the form data
+// and validation errors from fields. All fields must be exported to be used
+// by html/templates
+type snippetCreateForm struct {
+	Title               string `form:"title"`
+	Content             string `form:"content"`
+	Expires             int    `form:"expires"`
+	validator.Validator `form:"-"`
+}
 
 // This handler returns home page.
 func (app *appliaction) home(w http.ResponseWriter, r *http.Request) {
@@ -54,19 +64,32 @@ func (app *appliaction) snippetView(w http.ResponseWriter, r *http.Request) {
 
 // This handler handels all request to create a new snippet
 func (app *appliaction) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
-	var p models.Snippet
-	err := json.NewDecoder(r.Body).Decode(&p)
+	var form snippetCreateForm
+	err := app.decodePostForm(r, &form)
 	if err != nil {
-		app.badRequest(w)
+		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-	if p.Title == "" || p.Content == "" {
-		app.badRequest(w)
+
+	// Use Validator to check all fields.
+	form.CheckField(validator.NotBlank(form.Title), "title",
+		"This field cannot be blank")
+	form.CheckField(validator.MaxChars(form.Title, 100), "title",
+		"This field cannot be more than 100 characters long")
+	form.CheckField(validator.NotBlank(form.Content), "content",
+		"This field cannot be blank")
+	form.CheckField(validator.PermitedInt(form.Expires, 1, 7, 364), "expires",
+		"This field must equal 1,7 or 365")
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, http.StatusUnprocessableEntity, "create.html", data)
 		return
 	}
+
 	// Pass the data to the SnippetModel.Insert() method, reciving the
 	// ID of the new record back
-	id, err := app.snippets.Insert(p.Title, p.Content, 7)
+	id, err := app.snippets.Insert(form.Title, form.Content, form.Expires)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -76,7 +99,11 @@ func (app *appliaction) snippetCreatePost(w http.ResponseWriter, r *http.Request
 }
 
 func (app *appliaction) snippetCreate(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Display the form for creating a new snippet..."))
+	data := app.newTemplateData(r)
+	data.Form = snippetCreateForm{
+		Expires: 365,
+	}
+	app.render(w, http.StatusOK, "create.html", data)
 }
 
 func (app *appliaction) snippetDelete(w http.ResponseWriter, r *http.Request) {

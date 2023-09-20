@@ -2,11 +2,42 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 	"runtime/debug"
 	"time"
+
+	"github.com/go-playground/form/v4"
 )
+
+// decodePostForm() helper method. Made for a specific type of error
+// If app.formDecoder.Decode() gets something that isn't a non-nil pointer, then
+// Decode() will return a form.InvalidDecodeError.
+func (app *appliaction) decodePostForm(r *http.Request, dst any) error {
+	// Call ParseForm() on the request.
+	err := r.ParseForm()
+	if err != nil {
+		return err
+	}
+	// Call Decode() on our decoder instance, passing the target destination
+	// as the first paramter
+	err = app.formDecoder.Decode(dst, r.PostForm)
+	if err != nil {
+		// If we try to use an invalid target destination, the Decode() method
+		// will return an error with the type *form.InvalidDecoderError.We use
+		// errors.As() to check for this and raise a panic rather than returning
+		// the error.
+		var InvalidDecodeError *form.InvalidDecoderError
+
+		if errors.As(err, &InvalidDecodeError) {
+			panic(err)
+		}
+		// For all other errors, we return them as normal
+		return err
+	}
+	return nil
+}
 
 // Create a newTemplateData() helper, which returns a pointer to a
 // templateData struct initialize with the current year.
