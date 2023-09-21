@@ -6,7 +6,7 @@ import (
 )
 
 // Function to recover from panic
-func (app *appliaction) recoverPanic(next http.Handler) http.Handler {
+func (app *application) recoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Create a defered function to recover from panic
 		defer func() {
@@ -25,7 +25,7 @@ func (app *appliaction) recoverPanic(next http.Handler) http.Handler {
 }
 
 // Function to log every request into infoLog
-func (app *appliaction) logRequest(next http.Handler) http.Handler {
+func (app *application) logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		app.infoLog.Printf("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI())
 

@@ -21,8 +21,15 @@ type snippetCreateForm struct {
 	validator.Validator `form:"-"`
 }
 
+type userSignupForm struct{
+	Name string `form:"name"`
+	Email string `form:"email"`
+	Password string `form:"password"`
+	validator.Validator `form:"-"`
+}
+
 // This handler returns home page.
-func (app *appliaction) home(w http.ResponseWriter, r *http.Request) {
+func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	// Check if the current request URL path exactly matches "/".
 
 	snippets, err := app.snippets.Latest()
@@ -35,8 +42,8 @@ func (app *appliaction) home(w http.ResponseWriter, r *http.Request) {
 	app.render(w, http.StatusOK, "home.html", data)
 }
 
-// This handler allow to show the user particular snippet based on the passed ID.
-func (app *appliaction) snippetView(w http.ResponseWriter, r *http.Request) {
+// This handler shows user particular snippet based on the passed ID.
+func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	// httprouter extracts all parameters passed in the request in a form
 	// of a slice
 	params := httprouter.ParamsFromContext(r.Context())
@@ -64,8 +71,8 @@ func (app *appliaction) snippetView(w http.ResponseWriter, r *http.Request) {
 	app.render(w, http.StatusOK, "view.html", data)
 }
 
-// This handler handels all request to create a new snippet
-func (app *appliaction) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
+// This handler handels POST requests to create a new snipppet in the database
+func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	var form snippetCreateForm
 	err := app.decodePostForm(r, &form)
 	if err != nil {
@@ -102,16 +109,17 @@ func (app *appliaction) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	// Redirect the user to the relevant page for the snippet.
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }
-
-func (app *appliaction) snippetCreate(w http.ResponseWriter, r *http.Request) {
+// This handler handels GET requests to show user a form to create a snippet
+func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = snippetCreateForm{
 		Expires: 365,
 	}
 	app.render(w, http.StatusOK, "create.html", data)
 }
-
-func (app *appliaction) snippetDelete(w http.ResponseWriter, r *http.Request) {
+// This handler handels DELETE requests to remove created snippets from database
+// by their ID
+func (app *application) snippetDelete(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || id < 1 {
 		app.badRequest(w)
@@ -123,4 +131,26 @@ func (app *appliaction) snippetDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+// This handler handels GET requests to show user signup form
+func (app *application) userSignup (w http.ResponseWriter, r *http.Request){
+	data := app.newTemplateData(r)
+	data.Form = userSignupForm{}
+	app.render(w, http.StatusOK, "signup.html", data)
+}
+// This handler handels POST requests to save user info in the database
+func (app *application) userSignupPost (w http.ResponseWriter, r *http.Request){
+	fmt.Fprintln(w, "Create a new user...")
+}
+// This handler handels GET requests to show user login form
+func (app *application) userLogin(w http.ResponseWriter, r *http.Request){
+	fmt.Fprintln(w, "Display a HTML form for logging in a user ...")
+}
+// This handler handels POST requests to authinticate and login the user
+func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request){
+	fmt.Fprintln(w, "Authenticate and login the user...")
+}
+// This handler handels POST requests to logout the user
+func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request){
+	fmt.Fprintln(w, "Logout the user...")
 }

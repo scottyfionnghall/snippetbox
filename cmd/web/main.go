@@ -19,10 +19,11 @@ import (
 )
 
 // Define an application struct to hold the application-wide dependencies.
-type appliaction struct {
+type application struct {
 	errorLog       *log.Logger
 	infoLog        *log.Logger
 	snippets       *models.SnippetModel
+	users		   *models.UserModel
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder
 	sessionManager *scs.SessionManager
@@ -65,10 +66,11 @@ func main() {
 	sessionManager.Lifetime = 12 * time.Hour
 	sessionManager.Cookie.Secure = true
 
-	app := &appliaction{
+	app := &application{
 		errorLog:       errorLog,
 		infoLog:        infoLog,
 		snippets:       snippets,
+		users:          &models.UserModel{DB:db},
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,

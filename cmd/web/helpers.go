@@ -14,7 +14,7 @@ import (
 // decodePostForm() helper method. Made for a specific type of error
 // If app.formDecoder.Decode() gets something that isn't a non-nil pointer, then
 // Decode() will return a form.InvalidDecodeError.
-func (app *appliaction) decodePostForm(r *http.Request, dst any) error {
+func (app *application) decodePostForm(r *http.Request, dst any) error {
 	// Call ParseForm() on the request.
 	err := r.ParseForm()
 	if err != nil {
@@ -41,7 +41,7 @@ func (app *appliaction) decodePostForm(r *http.Request, dst any) error {
 
 // Create a newTemplateData() helper, which returns a pointer to a
 // templateData struct initialize with the current year.
-func (app *appliaction) newTemplateData(r *http.Request) *templateData {
+func (app *application) newTemplateData(r *http.Request) *templateData {
 	return &templateData{
 		CurrentYear: time.Now().Year(),
 		Flash : app.sessionManager.PopString(r.Context(), "flash"),
@@ -50,7 +50,7 @@ func (app *appliaction) newTemplateData(r *http.Request) *templateData {
 
 // The serverError helper writes an error message and stack trace to the errorLog,
 // then sends a generic 500 Internal Server Error response to the user.
-func (app *appliaction) serverError(w http.ResponseWriter, err error) {
+func (app *application) serverError(w http.ResponseWriter, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
 	app.errorLog.Output(2, trace)
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -58,20 +58,20 @@ func (app *appliaction) serverError(w http.ResponseWriter, err error) {
 
 // The clientError helper sends a specific status code and corresponding
 // description to the user.
-func (app *appliaction) clientError(w http.ResponseWriter, status int) {
+func (app *application) clientError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
 }
 
 // The notFound helper sends a 404 Not Founds response to the user
-func (app *appliaction) notFound(w http.ResponseWriter) {
+func (app *application) notFound(w http.ResponseWriter) {
 	app.clientError(w, http.StatusNotFound)
 }
 
-func (app *appliaction) badRequest(w http.ResponseWriter) {
+func (app *application) badRequest(w http.ResponseWriter) {
 	app.clientError(w, http.StatusBadRequest)
 }
 
-func (app *appliaction) render(w http.ResponseWriter, status int, page string, data *templateData) {
+func (app *application) render(w http.ResponseWriter, status int, page string, data *templateData) {
 	// Retrive the appropriate template set from the cache based on the page
 	// name. If no entry exists, the create a new error.
 	ts, ok := app.templateCache[page]

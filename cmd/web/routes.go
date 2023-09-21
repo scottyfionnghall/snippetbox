@@ -8,7 +8,7 @@ import (
 )
 
 // The routes method returns a servemux containing out application routes
-func (app *appliaction) routes() http.Handler {
+func (app *application) routes() http.Handler {
 	router := httprouter.New()
 
 	router.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -27,6 +27,11 @@ func (app *appliaction) routes() http.Handler {
 	router.Handler(http.MethodGet, "/snippet/create", dynamic.ThenFunc(app.snippetCreate))
 	router.Handler(http.MethodPost, "/snippet/create", dynamic.ThenFunc(app.snippetCreatePost))
 	router.Handler(http.MethodDelete, "/snippet/delete", dynamic.ThenFunc(app.snippetDelete))
+	router.Handler(http.MethodGet,"/user/signup", dynamic.ThenFunc(app.userSignup))
+	router.Handler(http.MethodPost,"/user/signup", dynamic.ThenFunc(app.userSignupPost))
+	router.Handler(http.MethodGet,"/user/login", dynamic.ThenFunc(app.userLogin))
+	router.Handler(http.MethodPost,"/user/login",dynamic.ThenFunc(app.userLoginPost))
+	router.Handler(http.MethodPost,"/user/logout",dynamic.ThenFunc(app.userLogoutPost))
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 
 	// Pass the servemux as the 'next' parameter to the secureHeaders middleware.
