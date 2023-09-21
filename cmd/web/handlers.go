@@ -57,8 +57,10 @@ func (app *appliaction) snippetView(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
 	data := app.newTemplateData(r)
 	data.Snippet = snippet
+
 	app.render(w, http.StatusOK, "view.html", data)
 }
 
@@ -78,7 +80,7 @@ func (app *appliaction) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		"This field cannot be more than 100 characters long")
 	form.CheckField(validator.NotBlank(form.Content), "content",
 		"This field cannot be blank")
-	form.CheckField(validator.PermitedInt(form.Expires, 1, 7, 364), "expires",
+	form.CheckField(validator.PermitedInt(form.Expires, 1, 7, 365), "expires",
 		"This field must equal 1,7 or 365")
 	if !form.Valid() {
 		data := app.newTemplateData(r)
@@ -94,6 +96,9 @@ func (app *appliaction) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		app.serverError(w, err)
 		return
 	}
+	// Use the Put() method to add a string value and the correspondin key
+	// to the session data
+	app.sessionManager.Put(r.Context(),"flash","Snippet successfully create!")
 	// Redirect the user to the relevant page for the snippet.
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }

@@ -18,12 +18,15 @@ func (app *appliaction) routes() http.Handler {
 	// Define file server
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", neuter(fileServer)))
-	// Define handler functions
-	router.HandlerFunc(http.MethodGet, "/", app.home)
-	router.HandlerFunc(http.MethodGet, "/snippet/view/:id", app.snippetView)
-	router.HandlerFunc(http.MethodGet, "/snippet/create", app.snippetCreate)
-	router.HandlerFunc(http.MethodPost, "/snippet/create", app.snippetCreatePost)
-	router.HandlerFunc(http.MethodDelete, "/snippet/delete", app.snippetDelete)
+	// Create a new middleware chain containing the middleware specific to our
+	// dynamic application routes.
+	dynamic := alice.New(app.sessionManager.LoadAndSave)
+	// Define handlers containing dynamic iddlware chain
+	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(app.home))
+	router.Handler(http.MethodGet, "/snippet/view/:id", dynamic.ThenFunc(app.snippetView))
+	router.Handler(http.MethodGet, "/snippet/create", dynamic.ThenFunc(app.snippetCreate))
+	router.Handler(http.MethodPost, "/snippet/create", dynamic.ThenFunc(app.snippetCreatePost))
+	router.Handler(http.MethodDelete, "/snippet/delete", dynamic.ThenFunc(app.snippetDelete))
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 
 	// Pass the servemux as the 'next' parameter to the secureHeaders middleware.
