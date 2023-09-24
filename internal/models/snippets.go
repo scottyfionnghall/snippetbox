@@ -56,15 +56,15 @@ func (s *SnippetModel) CloseAll() error {
 	if err != nil {
 		return err
 	}
-	s.GetStmt.Close()
+	err = s.GetStmt.Close()
 	if err != nil {
 		return err
 	}
-	s.DeleteStmt.Close()
+	err = s.DeleteStmt.Close()
 	if err != nil {
 		return err
 	}
-	s.LatestStmt.Close()
+	err = s.LatestStmt.Close()
 	if err != nil {
 		return err
 	}

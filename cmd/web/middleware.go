@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/justinas/nosurf"
 )
 
 // Function to recover from panic
@@ -28,7 +30,6 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 func (app *application) logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		app.infoLog.Printf("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI())
-
 		next.ServeHTTP(w, r)
 	})
 }
@@ -59,4 +60,31 @@ func secureHeaders(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (app *application) requireAuthentication(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// If the user is not authenticated, redirect them to the login page
+		if !app.isAuthenticated(r) {
+			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+			return
+		}
+		// Otherwise, set the "Cache-Control: no store" header so that pages
+		// require authentication are not stored in the users browser cache
+		w.Header().Add("Cache-Control", "no-store")
+		// And call the next handler in the chain
+		next.ServeHTTP(w, r)
+	})
+}
+
+// NoSurf middleware to prevent cross-site request forgery attacks.
+func noSurf(next http.Handler) http.Handler {
+	crsfHandler := nosurf.New(next)
+	crsfHandler.SetBaseCookie(http.Cookie{
+		HttpOnly: true,
+		Path:     "/",
+		Secure:   true,
+	})
+
+	return crsfHandler
 }

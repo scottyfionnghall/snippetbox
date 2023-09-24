@@ -1,21 +1,35 @@
 package validator
 
 import (
+	"regexp"
 	"strings"
 	"unicode/utf8"
 )
+
+// Var to parse a regular expression pattern through MustCompile() for sanity
+// checking the format of an email adress.
+// NOTE: This is not made from scratch expression, it's recomended by
+// W3C and Web Hypertext Application Technology Working Group
+var EmailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
 // Define a new Validator type wich contains a mp of validation errors for our
 // form fields.
 
 type Validator struct {
-	FieldErrors map[string]string
+	NonFieldErrors []string
+	FieldErrors    map[string]string
 }
 
 // Valid() return true if the FieldErrors map doesn't contain
 // any entries
 func (v *Validator) Valid() bool {
-	return len(v.FieldErrors) == 0
+	return len(v.FieldErrors) == 0 && len(v.NonFieldErrors) == 0
+}
+
+// Create an AddNonFieldError() helper for adding error messages to the new
+// NonFieldErrors slice
+func (v *Validator) AddNonFieldError(message string) {
+	v.NonFieldErrors = append(v.NonFieldErrors, message)
 }
 
 // AddFieldError() adds an error message to the FieldErrors map
@@ -58,4 +72,15 @@ func PermitedInt(value int, permittedValues ...int) bool {
 		}
 	}
 	return false
+}
+
+// Returns true if a value contains at least n characters
+func MinChars(value string, n int) bool {
+	return utf8.RuneCountInString(value) >= n
+}
+
+// Returns true if a value matches a provided compiled regular
+// expression pattern
+func Matches(value string, rx *regexp.Regexp) bool {
+	return rx.MatchString(value)
 }

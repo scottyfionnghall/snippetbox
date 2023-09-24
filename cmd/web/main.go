@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"flag"
 	"html/template"
@@ -9,7 +10,6 @@ import (
 	"os"
 	"strings"
 	"time"
-	"crypto/tls"
 
 	"github.com.scottyfionnghall.snippetbox/internal/models"
 	"github.com/alexedwards/scs/mysqlstore"
@@ -23,7 +23,7 @@ type application struct {
 	errorLog       *log.Logger
 	infoLog        *log.Logger
 	snippets       *models.SnippetModel
-	users		   *models.UserModel
+	users          *models.UserModel
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder
 	sessionManager *scs.SessionManager
@@ -52,6 +52,11 @@ func main() {
 		errorLog.Fatal(err)
 	}
 	defer snippets.CloseAll()
+	users, err := models.NewUserModel(db)
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+	defer users.CloseAll()
 	// Defer a db.Close() call
 	defer db.Close()
 	templateCache, err := newTemplateCache()
@@ -70,7 +75,7 @@ func main() {
 		errorLog:       errorLog,
 		infoLog:        infoLog,
 		snippets:       snippets,
-		users:          &models.UserModel{DB:db},
+		users:          users,
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
@@ -82,12 +87,12 @@ func main() {
 	}
 	// Initialize a new http.Server struct
 	srv := &http.Server{
-		Addr:     *addr,
-		ErrorLog: errorLog,
-		Handler:  app.routes(),
-		TLSConfig: tlsConfig,
-		IdleTimeout: time.Minute,
-		ReadTimeout: 5 * time.Second,
+		Addr:         *addr,
+		ErrorLog:     errorLog,
+		Handler:      app.routes(),
+		TLSConfig:    tlsConfig,
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
 	// Start server

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-playground/form/v4"
+	"github.com/justinas/nosurf"
 )
 
 // decodePostForm() helper method. Made for a specific type of error
@@ -43,8 +44,10 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 // templateData struct initialize with the current year.
 func (app *application) newTemplateData(r *http.Request) *templateData {
 	return &templateData{
-		CurrentYear: time.Now().Year(),
-		Flash : app.sessionManager.PopString(r.Context(), "flash"),
+		CurrentYear:     time.Now().Year(),
+		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
+		IsAuthenticated: app.isAuthenticated(r),
+		CSRFToken:       nosurf.Token(r),
 	}
 }
 
@@ -95,4 +98,10 @@ func (app *application) render(w http.ResponseWriter, status int, page string, d
 	w.WriteHeader(status)
 	// Write the contents of the buffer to the http.ResponseWriter
 	buf.WriteTo(w)
+}
+
+// Return true if the current request if rom an authenticated user,
+// otherwise return false.
+func (app *application) isAuthenticated(r *http.Request) bool {
+	return app.sessionManager.Exists(r.Context(), "authenticatedUserID")
 }
