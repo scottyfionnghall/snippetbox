@@ -21,6 +21,7 @@ type User struct {
 type UserModel struct {
 	InserStmt *sql.Stmt
 	AuthStmt  *sql.Stmt
+	ExistStmt *sql.Stmt
 	DB        *sql.DB
 }
 
@@ -34,7 +35,11 @@ func NewUserModel(db *sql.DB) (*UserModel, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &UserModel{InserStmt: insertSmt, AuthStmt: authStmt, DB: db}, nil
+	existStmt, err := db.Prepare("SELECT EXISTS(SELECT true FROM users WHERE id = ?)")
+	if err != nil {
+		return nil, err
+	}
+	return &UserModel{InserStmt: insertSmt, AuthStmt: authStmt, ExistStmt: existStmt, DB: db}, nil
 }
 
 func (u *UserModel) CloseAll() error {
@@ -102,5 +107,7 @@ func (m *UserModel) Authenticate(email, password string) (int, error) {
 
 // Method to check if the user with a specific ID exists
 func (m *UserModel) Exists(id int) (bool, error) {
-	return false, nil
+	var exists bool
+	err := m.ExistStmt.QueryRow(id).Scan(&exists)
+	return exists, err
 }
