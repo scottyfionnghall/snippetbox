@@ -26,7 +26,7 @@ func newTemplateCache() (map[string]*template.Template, error) {
 
 	// Use the fs.Glob() to get a slice of all filepaths in the ui.Files embedded
 	// filessystem wich match the pattern 'html/pages/*.html'.
-	pages, err := fs.Glob(ui.Files, "/html/pages/*.html")
+	pages, err := fs.Glob(ui.Files, "html/pages/*.html")
 	if err != nil {
 		return nil, err
 	}
