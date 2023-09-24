@@ -2,10 +2,12 @@ package main
 
 import (
 	"html/template"
+	"io/fs"
 	"path/filepath"
 	"time"
 
 	"github.com.scottyfionnghall.snippetbox/internal/models"
+	"github.com.scottyfionnghall.snippetbox/ui"
 )
 
 // Create a humanDate function which returns a nicely formatted string
@@ -22,9 +24,9 @@ func newTemplateCache() (map[string]*template.Template, error) {
 	// Initialize a new map to act as the cache
 	cache := map[string]*template.Template{}
 
-	// Use the filepath.Glob() function to get a slice of all filepath that
-	// math the patter "./ui/html/pages/*.html"
-	pages, err := filepath.Glob("./ui/html/pages/*.html")
+	// Use the fs.Glob() to get a slice of all filepaths in the ui.Files embedded
+	// filessystem wich match the pattern 'html/pages/*.html'.
+	pages, err := fs.Glob(ui.Files, "/html/pages/*.html")
 	if err != nil {
 		return nil, err
 	}
@@ -32,20 +34,17 @@ func newTemplateCache() (map[string]*template.Template, error) {
 	for _, page := range pages {
 		// Extracte the file name and assign it to the new name variable
 		name := filepath.Base(page)
-		// Parse the base template file into a template set
-		// The template.FuncMap must be registered with the template set before you
-		// call the ParseFiles() method.
-		ts, err := template.New(name).Funcs(functions).ParseFiles("./ui/html/base.html")
-		if err != nil {
-			return nil, err
+		// Create a slice containing the filepath for the templates
+		// we want to parse
+		patterns := []string{
+			"html/base.html",
+			"html/partials/*.html",
+			page,
 		}
-		// Call ParseGlob() *on this template set* to add any patials.
-		ts, err = ts.ParseGlob("./ui/html/partials/*.html")
-		if err != nil {
-			return nil, err
-		}
-		// Call ParseFiles() *on this template set* to add the page template.
-		ts, err = ts.ParseFiles(page)
+
+		// Use ParseFS() instead of ParseFiles() to parse the template files
+		// from the ui.Files embedded filesystem
+		ts, err := template.New(name).Funcs(functions).ParseFS(ui.Files, patterns...)
 		if err != nil {
 			return nil, err
 		}

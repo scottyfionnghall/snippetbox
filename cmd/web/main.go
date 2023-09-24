@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com.scottyfionnghall.snippetbox/internal/models"
@@ -112,16 +111,4 @@ func openDB(dsn string) (*sql.DB, error) {
 		return nil, err
 	}
 	return db, nil
-}
-
-// Disable directory listing for static directory
-func neuter(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasSuffix(r.URL.Path, "/") {
-			http.NotFound(w, r)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
 }

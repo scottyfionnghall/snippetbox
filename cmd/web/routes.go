@@ -2,6 +2,9 @@ package main
 
 import (
 	"net/http"
+	"strings"
+
+	"github.com.scottyfionnghall.snippetbox/ui"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
@@ -16,8 +19,10 @@ func (app *application) routes() http.Handler {
 	})
 
 	// Define file server
-	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", neuter(fileServer)))
+	// Tak the ui.Files embedded filesystem and convert it to a http.FS type
+	// so that it satisfues the http.FileSystem interface.
+	fileServer := http.FileServer(http.FS(ui.Files))
+	router.Handler(http.MethodGet, "/static/*filepath", neuter(fileServer))
 	// Create a new middleware chain containing the middleware specific to our
 	// dynamic application routes.
 	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
@@ -38,4 +43,16 @@ func (app *application) routes() http.Handler {
 
 	// Pass the servemux as the 'next' parameter to the secureHeaders middleware.
 	return standard.Then(router)
+}
+
+// Disable directory listing for static directory
+func neuter(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/") {
+			http.NotFound(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
