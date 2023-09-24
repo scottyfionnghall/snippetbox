@@ -24,6 +24,13 @@ type SnippetModel struct {
 	DeleteStmt *sql.Stmt
 }
 
+type SnippetModelInterface interface {
+	Insert(title string, content string, expires int) (int, error)
+	Get(id int) (*Snippet, error)
+	Latest() ([]*Snippet, error)
+	Delete(id int) error
+}
+
 // Creates a constructor for a SnippetModel, which includes prepared statements.
 // This is needed so we can reuse this statements and not recreate them on each call.
 func NewSnippetModel(db *sql.DB) (*SnippetModel, error) {

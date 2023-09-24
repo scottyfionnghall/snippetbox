@@ -25,6 +25,12 @@ type UserModel struct {
 	DB        *sql.DB
 }
 
+type UserModelInterface interface {
+	Insert(name, email, password string) error
+	Authenticate(email, password string) (int, error)
+	Exists(id int) (bool, error)
+}
+
 func NewUserModel(db *sql.DB) (*UserModel, error) {
 	insertSmt, err := db.Prepare(`INSERT INTO users (name, email, hashed_password, created)
 	VALUES(?,?,?,UTC_TIMESTAMP())`)
