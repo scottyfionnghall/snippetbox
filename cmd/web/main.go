@@ -50,12 +50,22 @@ func main() {
 	if err != nil {
 		errorLog.Fatal(err)
 	}
-	defer snippets.CloseAll()
+	defer func() {
+		err := snippets.CloseAll()
+		if err != nil {
+			errorLog.Fatal(err)
+		}
+	}()
 	users, err := models.NewUserModel(db)
 	if err != nil {
 		errorLog.Fatal(err)
 	}
-	defer users.CloseAll()
+	defer func() {
+		err := users.CloseAll()
+		if err != nil {
+			errorLog.Fatal(err)
+		}
+	}()
 	// Defer a db.Close() call
 	defer db.Close()
 	templateCache, err := newTemplateCache()

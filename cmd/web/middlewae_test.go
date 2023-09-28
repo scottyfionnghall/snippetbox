@@ -19,7 +19,10 @@ func TestSecureHeaders(t *testing.T) {
 	}
 
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("OK"))
+		_, err = w.Write([]byte("OK"))
+		if err != nil {
+			t.Fatal(err)
+		}
 	})
 
 	secureHeaders(next).ServeHTTP(rr, r)

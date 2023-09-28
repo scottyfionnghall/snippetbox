@@ -55,7 +55,10 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 // then sends a generic 500 Internal Server Error response to the user.
 func (app *application) serverError(w http.ResponseWriter, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
-	app.errorLog.Output(2, trace)
+	err = app.errorLog.Output(2, trace)
+	if err != nil {
+		app.serverError(w, err)
+	}
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
@@ -97,7 +100,10 @@ func (app *application) render(w http.ResponseWriter, status int, page string, d
 	// Write out the provided HTTP status code
 	w.WriteHeader(status)
 	// Write the contents of the buffer to the http.ResponseWriter
-	buf.WriteTo(w)
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		app.serverError(w, err)
+	}
 }
 
 // Return true if the current request if rom an authenticated user,
